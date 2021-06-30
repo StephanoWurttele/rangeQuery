@@ -1,1 +1,2 @@
-# rangeQuery
+# spatial-datastructures
+Spatial Data Structures
