@@ -56,9 +56,9 @@ template<typename Node, typename Rectangle, typename Point>
 bool QuadTree<Node, Rectangle, Point>::containsPoint(Point target, Rectangle region) {
     const int x=0, y=1;
     return target.get(x) >= region._min.get(x)
-        && target.get(x) < region._max.get(x)
+        && target.get(x) <= region._max.get(x)
         && target.get(y) >= region._min.get(y) 
-        && target.get(y) < region._max.get(y);
+        && target.get(y) <= region._max.get(y);
 }
 
 template<typename Node, typename Rectangle, typename Point>
@@ -81,39 +81,35 @@ std::vector<Point> QuadTree<Node, Rectangle, Point>::range_recursive(std::shared
         return response;
     }
     else{
-        if(region._max.get(x) >= node->get_point().get(x)){
-            if(region._min.get(y) <= node->get_point().get(y)){
+        if(region._max.get(x) >= node->get_point().get(x) && region._max.get(y) > node->get_point().get(y)){
+            temp = range_recursive(node->SE(), region);
+            response.insert(response.begin(), temp.begin(), temp.end());
+            if(region._min.get(x) < node->get_point().get(x)){
+                temp = range_recursive(node->NW(), region);
+                response.insert(response.begin(), temp.begin(), temp.end());
+            }else if(region._min.get(y) <= node->get_point().get(y)){
                 temp = range_recursive(node->SE(), region);
                 response.insert(response.begin(), temp.begin(), temp.end());
             }
-            if(region._max.get(y) > node->get_point().get(y)){
-                temp = range_recursive(node->NE(), region);
-                response.insert(response.begin(), temp.begin(), temp.end());
-            }
         }
-        else{
+        else if(region._max.get(x) < node->get_point().get(x) && region._max.get(y) > node->get_point().get(y)){
+            temp = range_recursive(node->NW(), region);
+            response.insert(response.begin(), temp.begin(), temp.end());
             if(region._min.get(y) <= node->get_point().get(y)){
                 temp = range_recursive(node->SW(), region);
                 response.insert(response.begin(), temp.begin(), temp.end());
             }
-            if(region._max.get(y) > node->get_point().get(y)){
-                temp = range_recursive(node->NW(), region);
-                response.insert(response.begin(), temp.begin(), temp.end());
-            }
         }
-        
-        if(region._max.get(y) > node->get_point().get(y)){
-            if(region._min.get(x) < node->get_point().get(x)){
-                temp = range_recursive(node->NW(), region);
-                response.insert(response.begin(), temp.begin(), temp.end());
-            }
+        else if(region._min < node->get_point()){
+            temp = range_recursive(node->SW(), region);
+            response.insert(response.begin(), temp.begin(), temp.end());
             if(region._max.get(x) >= node->get_point().get(x)){
-                temp = range_recursive(node->NE(), region);
+                temp = range_recursive(node->SE(), region);
                 response.insert(response.begin(), temp.begin(), temp.end());
             }
         }
-        else{
-            if(region._min.get(x) < node->get_point().get(x)){
+        else if(region._max.get(y) <= node->get_point().get(y)){
+            if(region._min.get(x) <= node->get_point().get(x)){
                 temp = range_recursive(node->SW(), region);
                 response.insert(response.begin(), temp.begin(), temp.end());
             }
@@ -121,6 +117,10 @@ std::vector<Point> QuadTree<Node, Rectangle, Point>::range_recursive(std::shared
                 temp = range_recursive(node->SE(), region);
                 response.insert(response.begin(), temp.begin(), temp.end());
             }
+        }
+        else{
+            temp = range_recursive(node->SE(), region);
+            response.insert(response.begin(), temp.begin(), temp.end());
         }
     }
     return response;
@@ -128,14 +128,14 @@ std::vector<Point> QuadTree<Node, Rectangle, Point>::range_recursive(std::shared
 
 template<typename Node, typename Rectangle, typename Point>
 std::vector<Point> QuadTree<Node, Rectangle, Point>::range(Rectangle region){
-    std::vector<Point> temp = range_recursive(this->root, region);
-    std::sort(temp.begin(), temp.end());
-    int count = std::distance(temp.begin(), std::unique(temp.begin(), temp.end()));
-    std::vector<Point> result;
-    for(int i = 0; i < count; ++i)
-        result.push_back(temp[i]);
-    return result;
-
+    // std::vector<Point> temp = range_recursive(this->root, region);
+    // std::sort(temp.begin(), temp.end());
+    // int count = std::distance(temp.begin(), std::unique(temp.begin(), temp.end()));
+    // std::vector<Point> result;
+    // for(int i = 0; i < count; ++i)
+    //     result.push_back(temp[i]);
+    // return result;
+    return range_recursive(this->root, region);
 }
 
 template<typename Node, typename Rectangle, typename Point>
